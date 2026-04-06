@@ -68,19 +68,27 @@ def get_analysis(analysis_id: str):
     analysis = ANALYSES.get(analysis_id)
     if not analysis:
         return None
-        
+
     removed = analysis.get("removed_accounts", [])
-    
+
     for acc in get_accounts():
         acc_id = acc["id"]
         if acc_id in removed:
             continue
-            
+
         if acc["type"] == "bank" and acc_id not in analysis.get("snapshots", {}):
-            analysis["snapshots"][acc_id] = {"name": acc["name"], "starting_balance": 0.0}
-        elif acc["type"] == "credit" and acc_id not in analysis.get("credit_snapshots", {}):
-            analysis["credit_snapshots"][acc_id] = {"name": acc["name"], "statement_balance": 0.0}
-            
+            analysis["snapshots"][acc_id] = {
+                "name": acc["name"],
+                "starting_balance": 0.0,
+            }
+        elif acc["type"] == "credit" and acc_id not in analysis.get(
+            "credit_snapshots", {}
+        ):
+            analysis["credit_snapshots"][acc_id] = {
+                "name": acc["name"],
+                "statement_balance": 0.0,
+            }
+
     return analysis
 
 
@@ -103,14 +111,17 @@ def add_account_to_analysis(analysis_id: str, acc_id: str):
     acc = get_account(acc_id)
     if not analysis or not acc:
         return False
-        
+
     if "removed_accounts" in analysis and acc_id in analysis["removed_accounts"]:
         analysis["removed_accounts"].remove(acc_id)
-    
+
     if acc["type"] == "bank" and acc_id not in analysis["snapshots"]:
         analysis["snapshots"][acc_id] = {"name": acc["name"], "starting_balance": 0.0}
     elif acc["type"] == "credit" and acc_id not in analysis["credit_snapshots"]:
-        analysis["credit_snapshots"][acc_id] = {"name": acc["name"], "statement_balance": 0.0}
+        analysis["credit_snapshots"][acc_id] = {
+            "name": acc["name"],
+            "statement_balance": 0.0,
+        }
     return True
 
 
@@ -118,22 +129,26 @@ def remove_account_from_analysis(analysis_id: str, acc_id: str):
     analysis = get_analysis(analysis_id)
     if not analysis:
         return False
-    
+
     removed = False
-    
+
     if "removed_accounts" not in analysis:
         analysis["removed_accounts"] = []
     if acc_id not in analysis["removed_accounts"]:
         analysis["removed_accounts"].append(acc_id)
-        
+
     if acc_id in analysis.get("snapshots", {}):
         del analysis["snapshots"][acc_id]
-        analysis["payments"] = [p for p in analysis["payments"] if p["bank_id"] != acc_id]
+        analysis["payments"] = [
+            p for p in analysis["payments"] if p["bank_id"] != acc_id
+        ]
         removed = True
-        
+
     if acc_id in analysis.get("credit_snapshots", {}):
         del analysis["credit_snapshots"][acc_id]
-        analysis["payments"] = [p for p in analysis["payments"] if p["credit_id"] != acc_id]
+        analysis["payments"] = [
+            p for p in analysis["payments"] if p["credit_id"] != acc_id
+        ]
         removed = True
 
     return removed

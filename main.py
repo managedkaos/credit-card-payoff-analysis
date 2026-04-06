@@ -40,7 +40,12 @@ async def view_analysis(request: Request, analysis_id: str):
     return templates.TemplateResponse(
         request=request,
         name="analysis.html",
-        context={"request": request, "analysis": analysis, "banks": banks, "credits": credits},
+        context={
+            "request": request,
+            "analysis": analysis,
+            "banks": banks,
+            "credits": credits,
+        },
     )
 
 
@@ -91,7 +96,9 @@ async def edit_account(request: Request, account_id: str):
 
 
 @app.post("/accounts/{account_id}/update", response_class=HTMLResponse)
-async def update_account_route(request: Request, account_id: str, name: str = Form(...)):
+async def update_account_route(
+    request: Request, account_id: str, name: str = Form(...)
+):
     db.update_account(account_id, name)
     accounts = db.get_accounts()
     return templates.TemplateResponse(
@@ -102,7 +109,9 @@ async def update_account_route(request: Request, account_id: str, name: str = Fo
 
 
 @app.post("/analyses/{analysis_id}/update_title", response_class=HTMLResponse)
-async def update_analysis_title(request: Request, analysis_id: str, title: str = Form(...)):
+async def update_analysis_title(
+    request: Request, analysis_id: str, title: str = Form(...)
+):
     db.save_analysis(analysis_id, {"title": title})
     analysis = db.get_analysis(analysis_id)
     return templates.TemplateResponse(
@@ -113,7 +122,9 @@ async def update_analysis_title(request: Request, analysis_id: str, title: str =
 
 
 @app.post("/analyses/{analysis_id}/add_account", response_class=HTMLResponse)
-async def add_account_to_analysis_route(request: Request, analysis_id: str, account_id: str = Form(...)):
+async def add_account_to_analysis_route(
+    request: Request, analysis_id: str, account_id: str = Form(...)
+):
     db.add_account_to_analysis(analysis_id, account_id)
     analysis = db.get_analysis(analysis_id)
     accounts = db.get_accounts()
@@ -122,12 +133,19 @@ async def add_account_to_analysis_route(request: Request, analysis_id: str, acco
     return templates.TemplateResponse(
         request=request,
         name="partials/_analysis_full_tables.html",
-        context={"request": request, "analysis": analysis, "banks": banks, "credits": credits},
+        context={
+            "request": request,
+            "analysis": analysis,
+            "banks": banks,
+            "credits": credits,
+        },
     )
 
 
 @app.post("/analyses/{analysis_id}/remove_account", response_class=HTMLResponse)
-async def remove_account_from_analysis_route(request: Request, analysis_id: str, account_id: str = Form(...)):
+async def remove_account_from_analysis_route(
+    request: Request, analysis_id: str, account_id: str = Form(...)
+):
     db.remove_account_from_analysis(analysis_id, account_id)
     analysis = db.get_analysis(analysis_id)
     accounts = db.get_accounts()
@@ -136,7 +154,12 @@ async def remove_account_from_analysis_route(request: Request, analysis_id: str,
     return templates.TemplateResponse(
         request=request,
         name="partials/_analysis_full_tables.html",
-        context={"request": request, "analysis": analysis, "banks": banks, "credits": credits},
+        context={
+            "request": request,
+            "analysis": analysis,
+            "banks": banks,
+            "credits": credits,
+        },
     )
 
 
@@ -163,7 +186,12 @@ async def update_snapshot(
     return templates.TemplateResponse(
         request=request,
         name="partials/_analysis_full_tables.html",
-        context={"request": request, "analysis": analysis, "banks": banks, "credits": credits},
+        context={
+            "request": request,
+            "analysis": analysis,
+            "banks": banks,
+            "credits": credits,
+        },
     )
 
 
@@ -187,7 +215,12 @@ async def add_payment(
     return templates.TemplateResponse(
         request=request,
         name="partials/_analysis_full_tables.html",
-        context={"request": request, "analysis": analysis, "banks": banks, "credits": credits},
+        context={
+            "request": request,
+            "analysis": analysis,
+            "banks": banks,
+            "credits": credits,
+        },
     )
 
 
@@ -203,5 +236,10 @@ async def remove_payment(request: Request, analysis_id: str, payment_id: str):
     return templates.TemplateResponse(
         request=request,
         name="partials/_analysis_full_tables.html",
-        context={"request": request, "analysis": analysis, "banks": banks, "credits": credits},
+        context={
+            "request": request,
+            "analysis": analysis,
+            "banks": banks,
+            "credits": credits,
+        },
     )
