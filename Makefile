@@ -56,8 +56,16 @@ isort:
 test:
 	python -m unittest --verbose --failfast
 
-serve:
+uvicorn:
 	/usr/bin/env uvicorn main:app --reload
+
+serve: dynamodb-start uvicorn
+
+dynamodb-start:
+	docker compose up --detach dynamodb
+
+dynamodb-stop:
+	docker compose down
 
 clean:
 	@rm -rf ./__pycache__ ./tests/__pycache__ .ruff_cache

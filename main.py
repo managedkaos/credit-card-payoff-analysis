@@ -8,6 +8,8 @@ from mangum import Mangum
 import database as db
 
 app = FastAPI(title="Credit Card Balance Overview")
+db.init_db()
+
 templates = Jinja2Templates(directory="templates")
 
 handler = Mangum(app)  # For AWS Lambda deployment
