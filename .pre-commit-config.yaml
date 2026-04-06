@@ -19,7 +19,7 @@ repos:
     rev: 7.3.0
     hooks:
       - id: flake8
-        args: ["--ignore=E501,E231"]
+        args: ["--ignore=E501,E231,W503"]
 
 
   # Security checks

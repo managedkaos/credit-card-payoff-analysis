@@ -60,7 +60,7 @@ function applyFilterSort() {
     const list = document.querySelector('#account-list ul');
     if(!list) return;
     const items = Array.from(list.querySelectorAll('li[data-account-type]'));
-    
+
     items.sort((a, b) => {
         if (sort === 'name_asc') return a.dataset.accountName.localeCompare(b.dataset.accountName);
         if (sort === 'name_desc') return b.dataset.accountName.localeCompare(a.dataset.accountName);
@@ -69,7 +69,7 @@ function applyFilterSort() {
         // Let's sort by data-index
         return parseInt(a.dataset.index) - parseInt(b.dataset.index);
     });
-    
+
     items.forEach(item => {
         if (filter === 'all' || item.dataset.accountType === filter) {
             item.style.display = '';

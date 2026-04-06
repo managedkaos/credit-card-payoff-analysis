@@ -123,7 +123,7 @@
                                     <button hx-post="/analyses/{{analysis.id}}/payments/{{p.id}}/delete" hx-target="#full-tables" class="ml-auto text-red-400 hover:text-red-700 hover:bg-red-50 rounded px-1.5 py-0.5 text-lg leading-none transition cursor-pointer" title="Delete Payment">&times;</button>
                                 </div>
                                 {% endfor %}
-                                
+
                                 <form hx-post="/analyses/{{analysis.id}}/payments" hx-target="#full-tables" hx-on::after-request="this.reset()" class="flex flex-col xl:flex-row gap-2 mt-2 bg-blue-50/50 p-3 rounded-md border border-blue-100/50">
                                     <input type="hidden" name="credit_id" value="{{credit_id}}">
                                     <div class="flex gap-2 flex-1">
