@@ -15,8 +15,7 @@ help:
 	@echo "  black                    - format code with black"
 	@echo "  isort                    - sort imports with isort"
 	@echo "  test                     - run unit tests"
-	@echo "  build                    - build docker container"
-	@echo "  clean                    - clean up workspace and containers"
+	@echo "  clean                    - clean up workspace"
 
 all: requirements lint test build
 
@@ -57,12 +56,7 @@ isort:
 test:
 	python -m unittest --verbose --failfast
 
-build: lint test
-	docker build --tag $(APP):$(TAG) .
-
 clean:
-	docker container stop $(APP) || true
-	docker container rm $(APP) || true
 	@rm -rf ./__pycache__ ./tests/__pycache__ .ruff_cache
 	@rm -f .*~ *.pyc
 
