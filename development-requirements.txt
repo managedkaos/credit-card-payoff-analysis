@@ -3,6 +3,8 @@ bandit
 black
 detect-secrets
 flake8
+httpx
 isort
 pre-commit
 pylint
+pytest

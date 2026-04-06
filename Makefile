@@ -44,21 +44,18 @@ x_pre-commit-clean:
 	pre-commit uninstall
 
 lint:
-	flake8 --ignore=E231,E501,W503 *.py
-	pylint --errors-only --disable=C0301 *.py
-	black --diff *.py
-	isort --check-only --diff *.py
+	flake8 --ignore=E231,E501,W503 *.py tests/
+	pylint --errors-only --disable=C0301 *.py tests/*.py
+	black --diff *.py tests/
+	isort --check-only --diff *.py tests/
 
 fmt: black isort
 
 black:
-	black *.py
+	black *.py tests/
 
 isort:
-	isort *.py
-
-test:
-	python -m unittest --verbose --failfast
+	isort *.py tests/
 
 docker-up:
 	docker compose up -d
@@ -69,7 +66,10 @@ docker-down:
 init-db: docker-up
 	DYNAMODB_ENDPOINT=http://localhost:8000 python -c "from database import create_table; create_table()"
 
-serve: docker-up init-db
+test: init-db
+	DYNAMODB_ENDPOINT=http://localhost:8000 python -m pytest tests/ -v
+
+serve: init-db
 	DYNAMODB_ENDPOINT=http://localhost:8000 /usr/bin/env uvicorn main:app --reload --port 8001
 
 clean:

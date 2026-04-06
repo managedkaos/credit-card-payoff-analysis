@@ -2,27 +2,31 @@
 
 {% block content %}
 <div class="mb-8">
-    <h1 class="text-2xl font-bold text-gray-900">Manage Accounts</h1>
+    <h1 class="text-2xl font-bold text-gray-900">Accounts</h1>
     <p class="mt-1 text-sm text-gray-500">Add your bank and credit card accounts to use in your analyses.</p>
 </div>
 
 <div class="bg-white shadow sm:rounded-lg mb-8">
     <div class="px-4 py-5 sm:p-6">
         <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Add New Account</h3>
-        <form hx-post="/accounts" hx-target="#account-list" hx-swap="innerHTML" hx-on::after-request="this.reset()" class="flex gap-4 items-end">
+        <form hx-post="/accounts" hx-target="#account-list" hx-swap="innerHTML" hx-on::after-request="this.reset()"
+            class="flex gap-4 items-end">
             <div class="flex-1">
                 <label for="name" class="block text-sm font-medium text-gray-700">Account Name</label>
-                <input type="text" name="name" id="name" required class="mt-1 focus:ring-brand focus:border-brand block w-full shadow-sm sm:text-sm border-gray-300 rounded-md py-2 px-3 border border-gray-300">
+                <input type="text" name="name" id="name" required
+                    class="mt-1 focus:ring-brand focus:border-brand block w-full shadow-sm sm:text-sm border-gray-300 rounded-md py-2 px-3 border border-gray-300">
             </div>
             <div class="w-48">
                 <label for="type" class="block text-sm font-medium text-gray-700">Account Type</label>
-                <select id="type" name="type" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-brand focus:border-brand sm:text-sm">
+                <select id="type" name="type"
+                    class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-brand focus:border-brand sm:text-sm">
                     <option value="bank">Bank Account</option>
                     <option value="credit">Credit Card</option>
                 </select>
             </div>
             <div>
-                <button type="submit" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-brand hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand transition">
+                <button type="submit"
+                    class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-brand hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand transition">
                     Add Account
                 </button>
             </div>
@@ -33,7 +37,9 @@
 <div class="mb-4 flex flex-row flex-wrap gap-6 items-center">
     <div class="flex gap-2 items-center">
         <label for="filter-type" class="text-sm font-medium text-gray-700">Filter:</label>
-        <select id="filter-type" class="text-sm border-gray-300 rounded shadow-sm focus:ring-brand focus:border-brand py-1.5 px-3" onchange="applyFilterSort()">
+        <select id="filter-type"
+            class="text-sm border-gray-300 rounded shadow-sm focus:ring-brand focus:border-brand py-1.5 px-3"
+            onchange="applyFilterSort()">
             <option value="all">All Accounts</option>
             <option value="bank">Bank Accounts</option>
             <option value="credit">Credit Cards</option>
@@ -41,7 +47,9 @@
     </div>
     <div class="flex gap-2 items-center">
         <label for="sort-by" class="text-sm font-medium text-gray-700">Sort by:</label>
-        <select id="sort-by" class="text-sm border-gray-300 rounded shadow-sm focus:ring-brand focus:border-brand py-1.5 px-3" onchange="applyFilterSort()">
+        <select id="sort-by"
+            class="text-sm border-gray-300 rounded shadow-sm focus:ring-brand focus:border-brand py-1.5 px-3"
+            onchange="applyFilterSort()">
             <option value="default">Default</option>
             <option value="name_asc">Name (A-Z)</option>
             <option value="name_desc">Name (Z-A)</option>
@@ -54,35 +62,35 @@
 </div>
 
 <script>
-function applyFilterSort() {
-    const filter = document.getElementById('filter-type').value;
-    const sort = document.getElementById('sort-by').value;
-    const list = document.querySelector('#account-list ul');
-    if(!list) return;
-    const items = Array.from(list.querySelectorAll('li[data-account-type]'));
+    function applyFilterSort() {
+        const filter = document.getElementById('filter-type').value;
+        const sort = document.getElementById('sort-by').value;
+        const list = document.querySelector('#account-list ul');
+        if (!list) return;
+        const items = Array.from(list.querySelectorAll('li[data-account-type]'));
 
-    items.sort((a, b) => {
-        if (sort === 'name_asc') return a.dataset.accountName.localeCompare(b.dataset.accountName);
-        if (sort === 'name_desc') return b.dataset.accountName.localeCompare(a.dataset.accountName);
-        // Default sort fallback could be original DOM order if we track it,
-        // but name_asc is a safe predictable fallback or we can leave it as sorted by previous ops.
-        // Let's sort by data-index
-        return parseInt(a.dataset.index) - parseInt(b.dataset.index);
-    });
+        items.sort((a, b) => {
+            if (sort === 'name_asc') return a.dataset.accountName.localeCompare(b.dataset.accountName);
+            if (sort === 'name_desc') return b.dataset.accountName.localeCompare(a.dataset.accountName);
+            // Default sort fallback could be original DOM order if we track it,
+            // but name_asc is a safe predictable fallback or we can leave it as sorted by previous ops.
+            // Let's sort by data-index
+            return parseInt(a.dataset.index) - parseInt(b.dataset.index);
+        });
 
-    items.forEach(item => {
-        if (filter === 'all' || item.dataset.accountType === filter) {
-            item.style.display = '';
-        } else {
-            item.style.display = 'none';
-        }
-        list.appendChild(item);
-    });
-}
-document.body.addEventListener('htmx:afterSettle', function(e) {
-    if(e.detail.target.id === 'account-list') {
-        applyFilterSort();
+        items.forEach(item => {
+            if (filter === 'all' || item.dataset.accountType === filter) {
+                item.style.display = '';
+            } else {
+                item.style.display = 'none';
+            }
+            list.appendChild(item);
+        });
     }
-});
+    document.body.addEventListener('htmx:afterSettle', function (e) {
+        if (e.detail.target.id === 'account-list') {
+            applyFilterSort();
+        }
+    });
 </script>
 {% endblock %}
