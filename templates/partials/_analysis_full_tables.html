@@ -1,0 +1,193 @@
+{% set ns = namespace(total_bank_start=0, total_bank_end=0, total_credit_start=0, total_credit_end=0) %}
+
+<div class="grid grid-cols-1 xl:grid-cols-2 gap-8 items-start">
+    <!-- Bank Table -->
+    <div class="bg-white shadow sm:rounded-lg overflow-hidden">
+        <div class="px-4 py-5 border-b border-gray-200 sm:px-6 bg-gray-50">
+            <h3 class="text-lg leading-6 font-medium text-gray-900">Bank Accounts</h3>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Account</th>
+                        <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-32">Start Balance ($)</th>
+                        <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-24">Payments Out ($)</th>
+                        <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-32">End Balance ($)</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for bank_id, snap in analysis.snapshots.items() %}
+                        {% set total_paid = analysis.payments | selectattr("bank_id", "equalto", bank_id) | map(attribute="amount") | sum %}
+                        {% set ending_bal = snap.starting_balance - total_paid %}
+                        {% set ns.total_bank_start = ns.total_bank_start + snap.starting_balance %}
+                        {% set ns.total_bank_end = ns.total_bank_end + ending_bal %}
+                    <tr class="hover:bg-gray-50 transition">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            <div class="flex items-center gap-2 group/title">
+                                <span>{{ snap.name }}</span>
+                                <button hx-post="/analyses/{{analysis.id}}/remove_account" hx-target="#full-tables" hx-vals='{"account_id": "{{bank_id}}"}' class="opacity-0 group-hover/title:opacity-100 focus:opacity-100 text-red-400 hover:text-red-700 transition cursor-pointer" title="Remove from Analysis">
+                                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </td>
+                        <td class="px-4 py-4 whitespace-nowrap text-sm text-right">
+                            <form hx-post="/analyses/{{analysis.id}}/update_snapshot" hx-target="#full-tables" class="inline-flex items-center gap-2 group justify-end">
+                                <input type="hidden" name="type" value="bank">
+                                <input type="hidden" name="account_id" value="{{bank_id}}">
+                                <input type="number" step="0.01" name="amount" value="{{ '%.2f'|format(snap.starting_balance) }}" class="w-24 text-right border-gray-300 rounded focus:ring-brand focus:border-brand sm:text-sm px-2 py-1" onchange="this.form.requestSubmit()">
+                                <button type="submit" class="opacity-0 group-hover:opacity-100 focus-within:opacity-100 bg-brand text-white text-xs px-2 py-1.5 rounded hover:bg-blue-700 transition font-medium shadow-sm">Save</button>
+                            </form>
+                        </td>
+                        <td class="px-4 py-4 whitespace-nowrap text-sm text-right text-red-500 border-l border-r border-gray-50">-{{ "%.2f"|format(total_paid) }}</td>
+                        <td class="px-4 py-4 whitespace-nowrap text-sm text-right font-bold {% if ending_bal < 0 %}text-red-600{% else %}text-green-600{% endif %}">
+                            {{ "%.2f"|format(ending_bal) }}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="4" class="px-6 py-8 text-center text-sm text-gray-500">No bank accounts configured in this analysis.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        <div class="px-4 py-3 bg-gray-50 border-t border-gray-200">
+            <form hx-post="/analyses/{{analysis.id}}/add_account" hx-target="#full-tables" class="flex items-center justify-end gap-2">
+                <select name="account_id" required class="text-sm border-gray-300 rounded focus:ring-brand focus:border-brand px-2 py-1 min-w-[200px]">
+                    <option value="">Select bank account to add...</option>
+                    {% for db_acc in banks %}
+                        {% if db_acc.id not in analysis.snapshots %}
+                            <option value="{{ db_acc.id }}">{{ db_acc.name }}</option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+                <button type="submit" class="text-xs bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 font-medium px-3 py-1.5 rounded shadow-sm transition">Add Account</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Credit Cards Table -->
+    <div class="bg-white shadow sm:rounded-lg overflow-hidden">
+        <div class="px-4 py-5 border-b border-gray-200 sm:px-6 bg-gray-50">
+            <h3 class="text-lg leading-6 font-medium text-gray-900">Credit Cards</h3>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200" style="table-layout: auto;">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Card</th>
+                        <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-32">Statement ($)</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payments Scheduled</th>
+                        <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-32">End Balance ($)</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for credit_id, snap in analysis.credit_snapshots.items() %}
+                        {% set payments_for_card = analysis.payments | selectattr("credit_id", "equalto", credit_id) | list %}
+                        {% set total_paid = payments_for_card | map(attribute="amount") | sum %}
+                        <!-- We treat statement balance as a positive debt to pay down to 0, so end balance = statement - payments -->
+                        {% set ending_bal = snap.statement_balance - total_paid %}
+                        {% set ns.total_credit_start = ns.total_credit_start + snap.statement_balance %}
+                        {% set ns.total_credit_end = ns.total_credit_end + ending_bal %}
+                    <tr class="hover:bg-gray-50 flex-col sm:table-row transition">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 align-top">
+                            <div class="flex items-center gap-2 group/title">
+                                <span>{{ snap.name }}</span>
+                                <button hx-post="/analyses/{{analysis.id}}/remove_account" hx-target="#full-tables" hx-vals='{"account_id": "{{credit_id}}"}' class="opacity-0 group-hover/title:opacity-100 focus:opacity-100 text-red-400 hover:text-red-700 transition cursor-pointer" title="Remove from Analysis">
+                                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </td>
+                        <td class="px-4 py-4 whitespace-nowrap text-sm text-right align-top">
+                            <form hx-post="/analyses/{{analysis.id}}/update_snapshot" hx-target="#full-tables" class="inline-flex items-center gap-2 group justify-end">
+                                <input type="hidden" name="type" value="credit">
+                                <input type="hidden" name="account_id" value="{{credit_id}}">
+                                <input type="number" step="0.01" name="amount" value="{{ '%.2f'|format(snap.statement_balance) }}" class="w-24 text-right border-gray-300 rounded focus:ring-brand focus:border-brand sm:text-sm px-2 py-1" onchange="this.form.requestSubmit()">
+                                <button type="submit" class="opacity-0 group-hover:opacity-100 focus-within:opacity-100 bg-brand text-white text-xs px-2 py-1.5 rounded hover:bg-blue-700 transition font-medium shadow-sm">Save</button>
+                            </form>
+                        </td>
+                        <td class="px-4 py-4 text-sm align-top">
+                            <div class="flex flex-col gap-2">
+                                {% for p in payments_for_card %}
+                                <div class="flex items-center gap-2 bg-white p-2 rounded border border-gray-200 shadow-sm">
+                                    <span class="font-medium text-green-600">${{ "%.2f"|format(p.amount) }}</span>
+                                    <span class="text-gray-400 text-xs">from</span>
+                                    <span class="font-medium truncate max-w-[120px] text-gray-700">
+                                        {% for b in banks %}{% if b.id == p.bank_id %}{{ b.name }}{% endif %}{% endfor %}
+                                    </span>
+                                    <span class="text-gray-400 text-xs whitespace-nowrap">on {{ p.date }}</span>
+                                    <button hx-post="/analyses/{{analysis.id}}/payments/{{p.id}}/delete" hx-target="#full-tables" class="ml-auto text-red-400 hover:text-red-700 hover:bg-red-50 rounded px-1.5 py-0.5 text-lg leading-none transition cursor-pointer" title="Delete Payment">&times;</button>
+                                </div>
+                                {% endfor %}
+                                
+                                <form hx-post="/analyses/{{analysis.id}}/payments" hx-target="#full-tables" hx-on::after-request="this.reset()" class="flex flex-col xl:flex-row gap-2 mt-2 bg-blue-50/50 p-3 rounded-md border border-blue-100/50">
+                                    <input type="hidden" name="credit_id" value="{{credit_id}}">
+                                    <div class="flex gap-2 flex-1">
+                                        <input type="number" step="0.01" name="amount" required placeholder="Amt $" class="w-20 text-xs py-1.5 px-2 border border-gray-300 rounded focus:ring-brand focus:border-brand">
+                                        <select name="bank_id" required class="flex-1 text-xs py-1.5 px-2 border border-gray-300 rounded focus:ring-brand focus:border-brand min-w-[100px]">
+                                            <option value="">Source Bank...</option>
+                                            {% for b in banks %}
+                                            <option value="{{ b.id }}">{{ b.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="flex gap-2">
+                                        <input type="date" name="p_date" required value="{{ analysis.date }}" class="w-32 text-xs py-1.5 px-2 border border-gray-300 rounded focus:ring-brand focus:border-brand">
+                                        <button type="submit" class="bg-brand text-white text-xs font-semibold py-1.5 px-3 rounded hover:bg-blue-700 transition shadow-sm cursor-pointer whitespace-nowrap">Add Pay</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </td>
+                        <td class="px-4 py-4 whitespace-nowrap text-sm text-right align-top font-bold {% if ending_bal > 0 %}text-red-600{% else %}text-green-600{% endif %}">
+                            {{ "%.2f"|format(ending_bal) }}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="4" class="px-6 py-8 text-center text-sm text-gray-500">No credit cards configured in this analysis.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        <div class="px-4 py-3 bg-gray-50 border-t border-gray-200">
+            <form hx-post="/analyses/{{analysis.id}}/add_account" hx-target="#full-tables" class="flex items-center justify-end gap-2">
+                <select name="account_id" required class="text-sm border-gray-300 rounded focus:ring-brand focus:border-brand px-2 py-1 min-w-[200px]">
+                    <option value="">Select credit card to add...</option>
+                    {% for db_acc in credits %}
+                        {% if db_acc.id not in analysis.credit_snapshots %}
+                            <option value="{{ db_acc.id }}">{{ db_acc.name }}</option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+                <button type="submit" class="text-xs bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 font-medium px-3 py-1.5 rounded shadow-sm transition">Add Account</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Totals Row -->
+<div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6 bg-gradient-to-r from-gray-900 to-gray-800 shadow-lg sm:rounded-xl p-6 border-t-4 border-brand text-white">
+    <div class="text-center">
+        <p class="text-sm font-medium text-gray-400 uppercase tracking-wider">Start Bank / Credit Debt</p>
+        <p class="mt-2 text-2xl font-bold">${{ "%.2f"|format(ns.total_bank_start) }} / <span class="text-red-400">${{ "%.2f"|format(ns.total_credit_start) }}</span></p>
+    </div>
+    <div class="text-center md:border-l border-gray-700 pl-0 md:pl-6">
+        <p class="text-sm font-medium text-gray-400 uppercase tracking-wider">Starting Net Wealth</p>
+        {% set net_start = ns.total_bank_start - ns.total_credit_start %}
+        <p class="mt-2 text-3xl font-extrabold {% if net_start >= 0 %}text-green-400{% else %}text-red-500{% endif %}">
+            ${{ "%.2f"|format(net_start) }}
+        </p>
+    </div>
+    <div class="text-center md:border-l border-gray-700 pl-0 md:pl-6 bg-white/5 rounded-lg p-2 -my-2 flex flex-col justify-center">
+        <p class="text-sm font-medium text-brand uppercase tracking-wider">Projected End Net Wealth</p>
+        {% set net_end = ns.total_bank_end - ns.total_credit_end %}
+        <p class="mt-2 text-3xl font-extrabold {% if net_end >= 0 %}text-white{% else %}text-red-500{% endif %} drop-shadow">
+            ${{ "%.2f"|format(net_end) }}
+        </p>
+        <p class="mt-2 text-xs text-gray-400">Total Bank: ${{ "%.2f"|format(ns.total_bank_end) }} | Total Debt: ${{ "%.2f"|format(ns.total_credit_end) }}</p>
+    </div>
+</div>

@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="mb-8 flex justify-between items-center">
+    <div>
+        <h1 class="text-2xl font-bold text-gray-900">Analyses</h1>
+        <p class="mt-1 text-sm text-gray-500">View and manage your balance snapshots.</p>
+    </div>
+    <div class="flex gap-4">
+        <a href="/accounts" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand transition uppercase tracking-wide">
+            Manage Accounts
+        </a>
+        <form action="/analyses/new" method="POST">
+            <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-brand hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand transition uppercase tracking-wide">
+                New Analysis
+            </button>
+        </form>
+    </div>
+</div>
+
+<div class="bg-white shadow overflow-hidden sm:rounded-md">
+    <ul role="list" class="divide-y divide-gray-200">
+        {% for analysis in analyses %}
+        <li>
+            <a href="/analyses/{{ analysis.id }}" class="block hover:bg-gray-50 transition">
+                <div class="px-4 py-4 sm:px-6 flex justify-between items-center">
+                    <div>
+                        <p class="text-sm font-medium text-brand truncate">{{ analysis.title }}</p>
+                        <p class="mt-1 flex items-center text-sm text-gray-500">
+                            {{ analysis.date }}
+                        </p>
+                    </div>
+                    <div>
+                        <svg class="h-5 w-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                </div>
+            </a>
+        </li>
+        {% else %}
+        <li class="px-4 py-8 text-center text-gray-500 text-sm">
+            No analyses found. Create one to get started.
+        </li>
+        {% endfor %}
+    </ul>
+</div>
+{% endblock %}

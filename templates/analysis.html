@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="mb-6 flex justify-between items-center">
+    <div>
+        {% include "partials/_analysis_title.html" %}
+        <p class="mt-2 text-sm text-gray-500">Date: {{ analysis.date }} | Ref: {{ analysis.id }}</p>
+    </div>
+    <a href="/" class="text-brand hover:underline font-medium">&larr; Back to Analyses</a>
+</div>
+
+<div id="full-tables">
+    {% include "partials/_analysis_full_tables.html" %}
+</div>
+
+{% endblock %}

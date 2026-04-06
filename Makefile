@@ -56,6 +56,9 @@ isort:
 test:
 	python -m unittest --verbose --failfast
 
+serve:
+	/usr/bin/env uvicorn main:app --reload
+
 clean:
 	@rm -rf ./__pycache__ ./tests/__pycache__ .ruff_cache
 	@rm -f .*~ *.pyc
