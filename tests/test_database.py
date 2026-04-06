@@ -117,6 +117,13 @@ class TestCreateAnalysis:
         assert card["id"] in analysis["credit_snapshots"]
         assert analysis["credit_snapshots"][card["id"]]["statement_balance"] == 0.0
 
+    def test_includes_loan_accounts(self, clean_table):
+        """Loan accounts should appear in credit_snapshots alongside credit cards."""
+        loan = db.create_account("Auto Loan", "loan")
+        analysis = db.create_analysis()
+        assert loan["id"] in analysis["credit_snapshots"]
+        assert analysis["credit_snapshots"][loan["id"]]["statement_balance"] == 0.0
+
 
 class TestGetAnalyses:
     """Tests for database.get_analyses."""
@@ -166,6 +173,14 @@ class TestGetAnalysis:
         fetched = db.get_analysis(analysis["id"])
         assert new_bank["id"] in fetched["snapshots"]
         assert fetched["snapshots"][new_bank["id"]]["starting_balance"] == 0.0
+
+    def test_auto_adds_new_loan_accounts(self, clean_table):
+        """Loan accounts created after the analysis should be auto-added."""
+        analysis = db.create_analysis()
+        loan = db.create_account("New Loan", "loan")
+        fetched = db.get_analysis(analysis["id"])
+        assert loan["id"] in fetched["credit_snapshots"]
+        assert fetched["credit_snapshots"][loan["id"]]["statement_balance"] == 0.0
 
     def test_auto_add_respects_removed(self, clean_table):
         """Removed accounts should not be auto-added back."""
@@ -223,9 +238,17 @@ class TestUpdateSnapshot:
         fetched = db.get_analysis(analysis["id"])
         assert fetched["credit_snapshots"][card["id"]]["statement_balance"] == 1234.56
 
+    def test_update_loan_balance(self, clean_table):
+        """Should update a loan snapshot's statement_balance."""
+        loan = db.create_account("Auto Loan", "loan")
+        analysis = db.create_analysis()
+        db.update_snapshot(analysis["id"], loan["id"], "loan", 15000.00)
+        fetched = db.get_analysis(analysis["id"])
+        assert fetched["credit_snapshots"][loan["id"]]["statement_balance"] == 15000.00
+
     def test_invalid_type_returns_none(self, clean_table):
         """Should return None for an unrecognized account type."""
-        result = db.update_snapshot("x", "y", "loan", 100.0)
+        result = db.update_snapshot("x", "y", "investment", 100.0)
         assert result is None
 
 
@@ -321,6 +344,15 @@ class TestAddPayment:
         fetched = db.get_analysis(analysis["id"])
         assert len(fetched["payments"]) == 1
         assert fetched["payments"][0]["id"] == pay["id"]
+
+    def test_payment_toward_loan(self, clean_table):
+        """Payments should work with loan accounts the same as credit cards."""
+        loan = db.create_account("Auto Loan", "loan")
+        analysis = db.create_analysis()
+        fetched = db.get_analysis(analysis["id"])
+        assert len(fetched["payments"]) == 1
+        assert fetched["payments"][0]["credit_id"] == loan["id"]
+        assert fetched["payments"][0]["amount"] == 750.0
 
     def test_multiple_payments(self, clean_table):
         """Multiple payments should all appear in the analysis."""

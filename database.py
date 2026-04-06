@@ -171,7 +171,7 @@ def create_analysis() -> dict:
                         "starting_balance": Decimal("0"),
                     }
                 )
-            elif acc["type"] == "credit":
+            elif acc["type"] in ("credit", "loan"):
                 batch.put_item(
                     Item={
                         "PK": f"ANALYSIS#{analysis_id}",
@@ -187,7 +187,7 @@ def create_analysis() -> dict:
     for acc in accounts:
         if acc["type"] == "bank":
             bank_snaps[acc["id"]] = {"name": acc["name"], "starting_balance": 0.0}
-        elif acc["type"] == "credit":
+        elif acc["type"] in ("credit", "loan"):
             credit_snaps[acc["id"]] = {"name": acc["name"], "statement_balance": 0.0}
 
     return {
@@ -288,7 +288,7 @@ def get_analysis(analysis_id: str):
                 }
             )
             snapshots[acc_id] = {"name": acc["name"], "starting_balance": 0.0}
-        elif acc["type"] == "credit" and acc_id not in credit_snapshots:
+        elif acc["type"] in ("credit", "loan") and acc_id not in credit_snapshots:
             table.put_item(
                 Item={
                     "PK": f"ANALYSIS#{analysis_id}",
@@ -353,7 +353,7 @@ def update_snapshot(analysis_id: str, account_id: str, acc_type: str, amount: fl
     if acc_type == "bank":
         sk = f"BANK#{account_id}"
         field = "starting_balance"
-    elif acc_type == "credit":
+    elif acc_type in ("credit", "loan"):
         sk = f"CREDIT#{account_id}"
         field = "statement_balance"
     else:
@@ -405,7 +405,7 @@ def add_account_to_analysis(analysis_id: str, acc_id: str):
             "account_name": acc["name"],
             "starting_balance": Decimal("0"),
         }
-    elif acc["type"] == "credit":
+    elif acc["type"] in ("credit", "loan"):
         sk = f"CREDIT#{acc_id}"
         item = {
             "PK": f"ANALYSIS#{analysis_id}",

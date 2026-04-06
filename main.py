@@ -41,7 +41,7 @@ async def view_analysis(request: Request, analysis_id: str):
         return HTMLResponse("Analysis not found", status_code=404)
     accounts = db.get_accounts()
     banks = [a for a in accounts if a["type"] == "bank"]
-    credits = [a for a in accounts if a["type"] == "credit"]
+    credits = [a for a in accounts if a["type"] in ("credit", "loan")]
     return templates.TemplateResponse(
         request=request,
         name="analysis.html",
@@ -68,7 +68,7 @@ async def list_accounts(request: Request):
 @app.post("/accounts", response_class=HTMLResponse)
 async def add_account(request: Request, name: str = Form(...), type: str = Form(...)):
     """Create a new bank or credit account and return the updated account list partial."""
-    if type not in ["bank", "credit"]:
+    if type not in ["bank", "credit", "loan"]:
         return HTMLResponse("Invalid account type", status_code=400)
     db.create_account(name, type)
     accounts = db.get_accounts()
@@ -141,7 +141,7 @@ async def add_account_to_analysis_route(
     analysis = db.get_analysis(analysis_id)
     accounts = db.get_accounts()
     banks = [a for a in accounts if a["type"] == "bank"]
-    credits = [a for a in accounts if a["type"] == "credit"]
+    credits = [a for a in accounts if a["type"] in ("credit", "loan")]
     return templates.TemplateResponse(
         request=request,
         name="partials/_analysis_full_tables.html",
@@ -163,7 +163,7 @@ async def remove_account_from_analysis_route(
     analysis = db.get_analysis(analysis_id)
     accounts = db.get_accounts()
     banks = [a for a in accounts if a["type"] == "bank"]
-    credits = [a for a in accounts if a["type"] == "credit"]
+    credits = [a for a in accounts if a["type"] in ("credit", "loan")]
     return templates.TemplateResponse(
         request=request,
         name="partials/_analysis_full_tables.html",
@@ -191,7 +191,7 @@ async def update_snapshot(
         return HTMLResponse("Not found", 404)
     accounts = db.get_accounts()
     banks = [a for a in accounts if a["type"] == "bank"]
-    credits = [a for a in accounts if a["type"] == "credit"]
+    credits = [a for a in accounts if a["type"] in ("credit", "loan")]
     return templates.TemplateResponse(
         request=request,
         name="partials/_analysis_full_tables.html",
@@ -220,7 +220,7 @@ async def add_payment(
     analysis = db.get_analysis(analysis_id)
     accounts = db.get_accounts()
     banks = [a for a in accounts if a["type"] == "bank"]
-    credits = [a for a in accounts if a["type"] == "credit"]
+    credits = [a for a in accounts if a["type"] in ("credit", "loan")]
 
     return templates.TemplateResponse(
         request=request,
@@ -243,7 +243,7 @@ async def remove_payment(request: Request, analysis_id: str, payment_id: str):
     analysis = db.get_analysis(analysis_id)
     accounts = db.get_accounts()
     banks = [a for a in accounts if a["type"] == "bank"]
-    credits = [a for a in accounts if a["type"] == "credit"]
+    credits = [a for a in accounts if a["type"] in ("credit", "loan")]
     return templates.TemplateResponse(
         request=request,
         name="partials/_analysis_full_tables.html",

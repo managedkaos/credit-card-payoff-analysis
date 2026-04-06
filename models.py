@@ -9,7 +9,7 @@ class AccountCreate(BaseModel):
     """Input model for creating a bank or credit account."""
 
     name: str
-    type: Literal["bank", "credit"]
+    type: Literal["bank", "credit", "loan"]
 
 
 class PaymentInfo(BaseModel):

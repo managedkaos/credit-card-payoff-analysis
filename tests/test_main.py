@@ -13,7 +13,8 @@ from main import app
 
 MOCK_ACCOUNT_BANK = {"id": "bank-1", "name": "Chase Checking", "type": "bank"}
 MOCK_ACCOUNT_CREDIT = {"id": "credit-1", "name": "Amex Gold", "type": "credit"}
-MOCK_ACCOUNTS = [MOCK_ACCOUNT_BANK, MOCK_ACCOUNT_CREDIT]
+MOCK_ACCOUNT_LOAN = {"id": "loan-1", "name": "Auto Loan", "type": "loan"}
+MOCK_ACCOUNTS = [MOCK_ACCOUNT_BANK, MOCK_ACCOUNT_CREDIT, MOCK_ACCOUNT_LOAN]
 
 MOCK_ANALYSIS = {
     "id": "analysis-1",
@@ -126,9 +127,18 @@ def test_add_account(mock_create, mock_get, client):
     mock_create.assert_called_once_with("Savings", "bank")
 
 
+@patch("main.db.get_accounts", return_value=MOCK_ACCOUNTS)
+@patch("main.db.create_account", return_value=MOCK_ACCOUNT_LOAN)
+def test_add_loan_account(mock_create, mock_get, client):
+    """POST /accounts with type=loan should create the account."""
+    response = client.post("/accounts", data={"name": "Auto Loan", "type": "loan"})
+    assert response.status_code == 200
+    mock_create.assert_called_once_with("Auto Loan", "loan")
+
+
 def test_add_account_invalid_type(client):
     """POST /accounts with invalid type should return 400."""
-    response = client.post("/accounts", data={"name": "Bad", "type": "loan"})
+    response = client.post("/accounts", data={"name": "Bad", "type": "investment"})
     assert response.status_code == 400
 
 
@@ -225,6 +235,19 @@ def test_update_snapshot_credit(mock_update, mock_analysis, mock_accounts, clien
     )
     assert response.status_code == 200
     mock_update.assert_called_once_with("analysis-1", "credit-1", "credit", 800.0)
+
+
+@patch("main.db.get_accounts", return_value=MOCK_ACCOUNTS)
+@patch("main.db.get_analysis", return_value=MOCK_ANALYSIS)
+@patch("main.db.update_snapshot", return_value=True)
+def test_update_snapshot_loan(mock_update, mock_analysis, mock_accounts, client):
+    """POST update_snapshot for a loan should update statement_balance."""
+    response = client.post(
+        "/analyses/analysis-1/update_snapshot",
+        data={"account_id": "loan-1", "amount": "15000.00", "type": "loan"},
+    )
+    assert response.status_code == 200
+    mock_update.assert_called_once_with("analysis-1", "loan-1", "loan", 15000.0)
 
 
 @patch("main.db.get_analysis", return_value=None)
