@@ -1,6 +1,4 @@
-"""
-Unit tests
-"""
+"""Unit tests for the credit card payoff analysis application."""
 
 import unittest
 

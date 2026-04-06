@@ -1,3 +1,5 @@
+"""DynamoDB single-table data access layer for accounts, analyses, and payments."""
+
 import datetime
 import os
 import uuid
@@ -10,6 +12,7 @@ _table = None
 
 
 def _get_table():
+    """Return a lazily-initialized DynamoDB Table resource."""
     global _table
     if _table is None:
         endpoint = os.environ.get("DYNAMODB_ENDPOINT")
@@ -65,6 +68,7 @@ def _decimal_to_float(obj):
 
 
 def create_account(name: str, acc_type: str) -> dict:
+    """Create a new bank or credit account and return its dict representation."""
     acc_id = str(uuid.uuid4())
     table = _get_table()
     table.put_item(
@@ -79,6 +83,7 @@ def create_account(name: str, acc_type: str) -> dict:
 
 
 def get_accounts() -> list:
+    """Return all accounts as a list of dicts."""
     table = _get_table()
     response = table.scan(
         FilterExpression=Attr("PK").begins_with("ACCOUNT#")
@@ -96,6 +101,7 @@ def get_accounts() -> list:
 
 
 def get_account(acc_id: str):
+    """Return a single account by ID, or None if not found."""
     table = _get_table()
     response = table.get_item(
         Key={"PK": f"ACCOUNT#{acc_id}", "SK": f"ACCOUNT#{acc_id}"}
@@ -107,6 +113,7 @@ def get_account(acc_id: str):
 
 
 def update_account(acc_id: str, name: str):
+    """Rename an account. Returns the updated dict or None if not found."""
     table = _get_table()
     try:
         table.update_item(
@@ -122,6 +129,7 @@ def update_account(acc_id: str, name: str):
 
 
 def delete_account(acc_id: str):
+    """Delete an account by ID."""
     table = _get_table()
     table.delete_item(Key={"PK": f"ACCOUNT#{acc_id}", "SK": f"ACCOUNT#{acc_id}"})
     return True
@@ -366,6 +374,7 @@ def update_snapshot(analysis_id: str, account_id: str, acc_type: str, amount: fl
 
 
 def add_account_to_analysis(analysis_id: str, acc_id: str):
+    """Add or re-add an account snapshot to an analysis."""
     acc = get_account(acc_id)
     if not acc:
         return False
@@ -419,6 +428,7 @@ def add_account_to_analysis(analysis_id: str, acc_id: str):
 
 
 def remove_account_from_analysis(analysis_id: str, acc_id: str):
+    """Remove an account snapshot and its associated payments from an analysis."""
     table = _get_table()
 
     # Add to removed_accounts on META
@@ -499,6 +509,7 @@ def _delete_payments_by_bank(analysis_id: str, bank_id: str):
 def add_payment(
     analysis_id: str, credit_id: str, bank_id: str, amount: float, p_date: str
 ):
+    """Record a payment from a bank account toward a credit card in an analysis."""
     table = _get_table()
     payment_id = str(uuid.uuid4())
     table.put_item(
