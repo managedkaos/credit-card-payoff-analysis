@@ -16,6 +16,10 @@ help:
 	@echo "  isort                    - sort imports with isort"
 	@echo "  test                     - run unit tests"
 	@echo "  clean                    - clean up workspace"
+	@echo "  docker-up                - start DynamoDB Local via docker compose"
+	@echo "  docker-down              - stop DynamoDB Local"
+	@echo "  init-db                  - create DynamoDB table (starts docker if needed)"
+	@echo "  serve                    - start DynamoDB + uvicorn dev server on port 8001"
 
 all: requirements lint test build
 
@@ -56,11 +60,20 @@ isort:
 test:
 	python -m unittest --verbose --failfast
 
-serve:
-	/usr/bin/env uvicorn main:app --reload
+docker-up:
+	docker compose up -d
+
+docker-down:
+	docker compose down
+
+init-db: docker-up
+	DYNAMODB_ENDPOINT=http://localhost:8000 python -c "from database import create_table; create_table()"
+
+serve: docker-up init-db
+	DYNAMODB_ENDPOINT=http://localhost:8000 /usr/bin/env uvicorn main:app --reload --port 8001
 
 clean:
 	@rm -rf ./__pycache__ ./tests/__pycache__ .ruff_cache
 	@rm -f .*~ *.pyc
 
-.PHONY: help requirements lint black isort test build clean development-requirements pre-commit-install pre-commit-run pre-commit-clean
+.PHONY: help requirements lint black isort test build clean development-requirements pre-commit-install pre-commit-run pre-commit-clean docker-up docker-down init-db serve

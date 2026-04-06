@@ -171,15 +171,10 @@ async def update_snapshot(
     amount: float = Form(...),
     type: str = Form(...),
 ):
+    db.update_snapshot(analysis_id, account_id, type, amount)
     analysis = db.get_analysis(analysis_id)
     if not analysis:
         return HTMLResponse("Not found", 404)
-    if type == "bank" and account_id in analysis["snapshots"]:
-        analysis["snapshots"][account_id]["starting_balance"] = amount
-    elif type == "credit" and account_id in analysis["credit_snapshots"]:
-        analysis["credit_snapshots"][account_id]["statement_balance"] = amount
-
-    db.save_analysis(analysis_id, {})
     accounts = db.get_accounts()
     banks = [a for a in accounts if a["type"] == "bank"]
     credits = [a for a in accounts if a["type"] == "credit"]
