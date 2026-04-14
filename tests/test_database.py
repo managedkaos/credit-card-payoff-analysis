@@ -347,8 +347,10 @@ class TestAddPayment:
 
     def test_payment_toward_loan(self, clean_table):
         """Payments should work with loan accounts the same as credit cards."""
+        bank = db.create_account("Bank", "bank")
         loan = db.create_account("Auto Loan", "loan")
         analysis = db.create_analysis()
+        db.add_payment(analysis["id"], loan["id"], bank["id"], 750.0, "2026-04-06")
         fetched = db.get_analysis(analysis["id"])
         assert len(fetched["payments"]) == 1
         assert fetched["payments"][0]["credit_id"] == loan["id"]
